@@ -4,179 +4,219 @@
 @section('page_title', 'Master Barang')
 @section('use_toast', true)
 
+@section('breadcrumb')
+    <a href="{{ route('dashboard') }}" class="breadcrumb-item">Dashboard</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-item">Pembelian</span>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-item">Master Barang</span>
+@endsection
+
 @section('content')
 
-{{-- ========== DAFTAR BARANG ========== --}}
-<div class="card shadow-sm">
-    <div class="card-header">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <span class="fw-semibold d-flex align-items-center gap-2">
-                <i class="bi bi-list-ul text-primary"></i> Daftar Barang
-                <span class="badge bg-secondary rounded-pill">{{ $rows->count() }}</span>
-            </span>
-            <div class="d-flex flex-wrap gap-2 align-items-center">
-                {{-- Filter Tipe --}}
-                <form method="get" class="filter-bar">
-                    <select name="tipe" class="form-select form-select-sm filter-select" onchange="this.form.submit()">
-                        <option value="">Semua Tipe</option>
-                        <option value="lokal" @selected($filterTipe === 'lokal')>Lokal</option>
-                        <option value="impor" @selected($filterTipe === 'impor')>Impor</option>
-                    </select>
-                </form>
-                {{-- Tombol Tambah --}}
-                <button type="button" class="btn btn-primary btn-sm" id="btnTambah"
-                        data-bs-toggle="modal" data-bs-target="#modalBarang">
-                    <i class="bi bi-plus-lg"></i> Tambah Barang
-                </button>
-            </div>
+{{-- ========== STATS ========== --}}
+<div class="stats-grid-4" style="margin-bottom: 1.5rem;">
+    <div class="stat-widget">
+        <div class="stat-header">
+            <span class="stat-label">Total Stock</span>
+            <span class="stat-icon">📦</span>
+        </div>
+        <div class="stat-value">{{ $rows->count() }}</div>
+        <div class="stat-footer">
+            <span class="stat-description">Total items</span>
         </div>
     </div>
-    <div class="card-body p-0">
+    <div class="stat-widget success">
+        <div class="stat-header">
+            <span class="stat-label">Local Products</span>
+            <span class="stat-icon">🏠</span>
+        </div>
+        <div class="stat-value">{{ $rows->where('tipe', 'lokal')->count() }}</div>
+        <div class="stat-footer">
+            <span class="stat-description">Produk lokal</span>
+        </div>
+    </div>
+    <div class="stat-widget">
+        <div class="stat-header">
+            <span class="stat-label">Import Products</span>
+            <span class="stat-icon">🌏</span>
+        </div>
+        <div class="stat-value">{{ $rows->where('tipe', 'impor')->count() }}</div>
+        <div class="stat-footer">
+            <span class="stat-description">Produk import</span>
+        </div>
+    </div>
+    <div class="stat-widget alert">
+        <div class="stat-header">
+            <span class="stat-label">Low Stock</span>
+            <span class="stat-icon">⚠️</span>
+        </div>
+        <div class="stat-value text-danger">{{ $rows->where('stok', '<=', 5)->count() }}</div>
+        <div class="stat-footer">
+            <span class="stat-description">Needs restock</span>
+        </div>
+    </div>
+</div>
+
+{{-- ========== DAFTAR BARANG ========== --}}
+<div class="widget-card">
+    <div class="card-header">
+        <h3 class="card-title">Daftar Master Barang</h3>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <form method="get" style="margin: 0;">
+                <select name="tipe" class="form-select" style="padding: 0.5rem 2rem 0.5rem 0.75rem; font-size: 0.8125rem; border-radius: 0.375rem;" onchange="this.form.submit()">
+                    <option value="">Semua Tipe</option>
+                    <option value="lokal" @selected($filterTipe === 'lokal')>Lokal</option>
+                    <option value="impor" @selected($filterTipe === 'impor')>Impor</option>
+                </select>
+            </form>
+            <button type="button" class="btn-primary btn-sm" id="btnTambah"
+                    data-bs-toggle="modal" data-bs-target="#modalBarang">
+                <span>+</span> Tambah Barang
+            </button>
+        </div>
+    </div>
+
+    <div class="card-body no-padding">
         @if($rows->isEmpty())
-            {{-- Empty State --}}
             <div class="empty-state">
-                <i class="bi bi-inbox"></i>
+                <div class="icon">📦</div>
                 <h6>Belum ada data barang</h6>
-                <p class="text-muted mb-2">Tambahkan barang pertama Anda.</p>
-                <button type="button" class="btn btn-primary btn-sm"
+                <p class="text-muted" style="margin-bottom: 0.5rem;">Tambahkan barang pertama Anda.</p>
+                <button type="button" class="btn-primary btn-sm"
                         data-bs-toggle="modal" data-bs-target="#modalBarang">
-                    <i class="bi bi-plus-lg"></i> Tambah Barang
+                    <span>+</span> Tambah Barang
                 </button>
             </div>
         @else
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0 datatable" id="tableBarang" data-search-placeholder="Cari nama / kode barang...">
-                    <thead>
-                        <tr>
-                            <th class="text-start" style="min-width:200px">Barang</th>
-                            <th class="text-center" style="width:90px">Tipe</th>
-                            <th class="text-center" style="width:80px">Satuan</th>
-                            <th class="text-center" style="width:80px">Stok</th>
-                            <th class="text-end" style="min-width:130px">Harga Beli</th>
-                            <th class="text-end" style="min-width:130px">Harga Jual</th>
-                            <th class="text-start" style="min-width:140px">Supplier</th>
-                            <th class="text-center" style="width:100px">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($rows as $row)
-                            <tr id="row-{{ $row->id }}">
-                                <td>
-                                    <div class="fw-semibold">{{ $row->nama }}</div>
-                                    <small class="text-muted">{{ $row->kode }}</small>
-                                </td>
-                                <td class="text-center">
-                                    @if($row->tipe === 'lokal')
-                                        <span class="badge badge-tipe badge-lokal">Lokal</span>
-                                    @else
-                                        <span class="badge badge-tipe badge-impor">Impor</span>
-                                    @endif
-                                </td>
-                                <td class="text-center">{{ $row->satuan }}</td>
-                                <td class="text-center">
-                                    @if($row->stok <= 0)
-                                        <span class="badge bg-danger bg-opacity-10 text-danger">{{ $row->stok }}</span>
-                                    @elseif($row->stok <= 5)
-                                        <span class="badge bg-warning bg-opacity-10 text-warning">{{ $row->stok }}</span>
-                                    @else
-                                        <span class="fw-medium">{{ $row->stok }}</span>
-                                    @endif
-                                </td>
-                                <td class="text-end font-monospace">@rupiah($row->harga_beli)</td>
-                                <td class="text-end font-monospace">@rupiah($row->harga_jual)</td>
-                                <td>{{ $row->supplier->nama ?? '—' }}</td>
-                                <td class="text-center">
-                                    <div class="d-flex justify-content-center gap-1">
-                                        <button type="button"
-                                                class="btn btn-icon btn-outline-warning btn-sm btn-edit"
-                                                title="Edit"
-                                                data-id="{{ $row->id }}"
-                                                data-nama="{{ $row->nama }}"
-                                                data-tipe="{{ $row->tipe }}"
-                                                data-satuan="{{ $row->satuan }}"
-                                                data-harga_beli="{{ $row->harga_beli }}"
-                                                data-harga_jual="{{ $row->harga_jual }}"
-                                                data-stok="{{ $row->stok }}"
-                                                data-supplier_id="{{ $row->supplier_id }}">
-                                            <i class="bi bi-pencil"></i>
+            <table class="filament-table datatable" id="tableBarang" data-search-placeholder="Cari nama / kode barang...">
+                <thead>
+                    <tr>
+                        <th style="min-width:200px">Barang</th>
+                        <th>Tipe</th>
+                        <th>Satuan</th>
+                        <th>Stok</th>
+                        <th>Harga Beli</th>
+                        <th>Harga Jual</th>
+                        <th>Supplier</th>
+                        <th class="text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($rows as $row)
+                        <tr id="row-{{ $row->id }}">
+                            <td>
+                                <strong>{{ $row->nama }}</strong>
+                                <br><small style="color: var(--gray-500);">{{ $row->kode }}</small>
+                            </td>
+                            <td>
+                                @if($row->tipe === 'lokal')
+                                    <span class="badge gray">🏠 Lokal</span>
+                                @else
+                                    <span class="badge info">🌏 Impor</span>
+                                @endif
+                            </td>
+                            <td>{{ $row->satuan }}</td>
+                            <td>
+                                @if($row->stok <= 0)
+                                    <span class="badge danger">{{ $row->stok }}</span>
+                                @elseif($row->stok <= 5)
+                                    <span class="badge warning">{{ $row->stok }}</span>
+                                @else
+                                    <strong>{{ $row->stok }}</strong>
+                                @endif
+                            </td>
+                            <td>@rupiah($row->harga_beli)</td>
+                            <td>@rupiah($row->harga_jual)</td>
+                            <td>{{ $row->supplier->nama ?? '—' }}</td>
+                            <td class="text-right">
+                                <div class="table-actions" style="justify-content: flex-end;">
+                                    <button type="button"
+                                            class="action-btn edit btn-edit"
+                                            title="Edit"
+                                            data-id="{{ $row->id }}"
+                                            data-nama="{{ $row->nama }}"
+                                            data-tipe="{{ $row->tipe }}"
+                                            data-satuan="{{ $row->satuan }}"
+                                            data-harga_beli="{{ $row->harga_beli }}"
+                                            data-harga_jual="{{ $row->harga_jual }}"
+                                            data-stok="{{ $row->stok }}"
+                                            data-supplier_id="{{ $row->supplier_id }}">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <form method="post" action="{{ route('barang.destroy', $row) }}">
+                                        @csrf @method('DELETE')
+                                        <button type="submit"
+                                                class="action-btn delete btn-delete"
+                                                title="Hapus">
+                                            <i class="bi bi-trash3"></i>
                                         </button>
-                                        <form method="post" action="{{ route('barang.destroy', $row) }}">
-                                            @csrf @method('DELETE')
-                                            <button type="submit"
-                                                    class="btn btn-icon btn-outline-danger btn-sm btn-delete"
-                                                    title="Hapus">
-                                                <i class="bi bi-trash3"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         @endif
     </div>
 </div>
 
 {{-- ========== RIWAYAT BARANG MASUK ========== --}}
-<div class="card shadow-sm mt-3">
+<div class="widget-card" style="margin-top: 1.5rem;">
     <div class="card-header">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <span class="fw-semibold d-flex align-items-center gap-2">
-                <i class="bi bi-box-arrow-in-down text-primary"></i> Riwayat Barang Masuk
-                <span class="badge bg-secondary rounded-pill">{{ $barangMasukRows->count() }}</span>
-            </span>
-            <button type="button" class="btn btn-primary btn-sm" id="btnTambahBarangMasuk"
-                    data-bs-toggle="modal" data-bs-target="#modalBarangMasuk">
-                <i class="bi bi-plus-lg"></i> Input Barang Masuk
-            </button>
-        </div>
+        <h3 class="card-title">
+            Riwayat Barang Masuk
+            <span class="badge gray" style="margin-left: 0.5rem;">{{ $barangMasukRows->count() }}</span>
+        </h3>
+        <button type="button" class="btn-primary btn-sm" id="btnTambahBarangMasuk"
+                data-bs-toggle="modal" data-bs-target="#modalBarangMasuk">
+            <span>+</span> Input Barang Masuk
+        </button>
     </div>
-    <div class="card-body p-0">
+
+    <div class="card-body no-padding">
         @if($barangMasukRows->isEmpty())
             <div class="empty-state">
-                <i class="bi bi-box-arrow-in-down"></i>
+                <div class="icon">📥</div>
                 <h6>Belum ada transaksi barang masuk</h6>
-                <p class="text-muted mb-2">Catat penerimaan barang pertama Anda.</p>
-                <button type="button" class="btn btn-primary btn-sm"
+                <p class="text-muted" style="margin-bottom: 0.5rem;">Catat penerimaan barang pertama Anda.</p>
+                <button type="button" class="btn-primary btn-sm"
                         data-bs-toggle="modal" data-bs-target="#modalBarangMasuk">
-                    <i class="bi bi-plus-lg"></i> Input Barang Masuk
+                    <span>+</span> Input Barang Masuk
                 </button>
             </div>
         @else
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0 datatable" data-search-placeholder="Cari nomor / supplier / user...">
-                    <thead>
+            <table class="filament-table datatable" data-search-placeholder="Cari nomor / supplier / user...">
+                <thead>
+                    <tr>
+                        <th style="min-width:140px">Nomor</th>
+                        <th>Tanggal</th>
+                        <th style="min-width:160px">Supplier</th>
+                        <th>Tipe</th>
+                        <th class="text-right">Total Nilai</th>
+                        <th>Dibuat Oleh</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($barangMasukRows as $bmRow)
                         <tr>
-                            <th class="text-start" style="min-width:140px">Nomor</th>
-                            <th class="text-center" style="width:120px">Tanggal</th>
-                            <th class="text-start" style="min-width:160px">Supplier</th>
-                            <th class="text-center" style="width:90px">Tipe</th>
-                            <th class="text-end" style="min-width:140px">Total Nilai</th>
-                            <th class="text-start" style="min-width:120px">Dibuat Oleh</th>
+                            <td><strong>{{ $bmRow->nomor }}</strong></td>
+                            <td>{{ \Carbon\Carbon::parse($bmRow->tanggal)->format('d M Y') }}</td>
+                            <td>{{ $bmRow->supplier->nama }}</td>
+                            <td>
+                                @if($bmRow->tipe === 'lokal')
+                                    <span class="badge gray">🏠 Lokal</span>
+                                @else
+                                    <span class="badge info">🌏 Impor</span>
+                                @endif
+                            </td>
+                            <td class="text-right" style="font-family: monospace;">@rupiah($bmRow->total_nilai)</td>
+                            <td><small style="color: var(--gray-500);">{{ $bmRow->creator->nama }}</small></td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($barangMasukRows as $bmRow)
-                            <tr>
-                                <td><span class="fw-semibold">{{ $bmRow->nomor }}</span></td>
-                                <td class="text-center">{{ \Carbon\Carbon::parse($bmRow->tanggal)->format('d M Y') }}</td>
-                                <td>{{ $bmRow->supplier->nama }}</td>
-                                <td class="text-center">
-                                    @if($bmRow->tipe === 'lokal')
-                                        <span class="badge badge-tipe badge-lokal">Lokal</span>
-                                    @else
-                                        <span class="badge badge-tipe badge-impor">Impor</span>
-                                    @endif
-                                </td>
-                                <td class="text-end font-monospace">@rupiah($bmRow->total_nilai)</td>
-                                <td><small class="text-muted">{{ $bmRow->creator->nama }}</small></td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                    @endforeach
+                </tbody>
+            </table>
         @endif
     </div>
 </div>
@@ -526,31 +566,6 @@ $(function () {
 
     form.addEventListener('input', checkFormValidity);
     checkFormValidity();
-
-    // ---- Toast notifications ----
-    @if(session('success'))
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: '{{ session('success') }}',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-        });
-    @endif
-
-    @if(session('error'))
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'error',
-            title: '{{ session('error') }}',
-            showConfirmButton: false,
-            timer: 4000,
-            timerProgressBar: true,
-        });
-    @endif
 
     // ---- Highlight newly added/updated row ----
     @if(session('success'))

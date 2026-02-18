@@ -4,91 +4,135 @@
 @section('page_title', 'Supplier')
 @section('use_toast', true)
 
+@section('breadcrumb')
+    <a href="{{ route('dashboard') }}" class="breadcrumb-item">Dashboard</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-item">Pembelian</span>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-item">Suppliers</span>
+@endsection
+
 @section('content')
 
-{{-- ========== DAFTAR SUPPLIER ========== --}}
-<div class="card shadow-sm">
-    <div class="card-header">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <span class="fw-semibold d-flex align-items-center gap-2">
-                <i class="bi bi-building text-primary"></i> Daftar Supplier
-                <span class="badge bg-secondary rounded-pill">{{ $rows->count() }}</span>
-            </span>
-            <button type="button" class="btn btn-primary btn-sm" id="btnTambah"
-                    data-bs-toggle="modal" data-bs-target="#modalSupplier">
-                <i class="bi bi-plus-lg"></i> Tambah Supplier
-            </button>
+{{-- ========== STATS ========== --}}
+<div class="stats-grid-2" style="margin-bottom: 1.5rem;">
+    <div class="stat-widget">
+        <div class="stat-header">
+            <span class="stat-label">Total Suppliers</span>
+            <span class="stat-icon">🏭</span>
+        </div>
+        <div class="stat-value">{{ $rows->count() }}</div>
+        <div class="stat-footer">
+            <span class="stat-description">Registered suppliers</span>
         </div>
     </div>
-    <div class="card-body p-0">
+    <div class="stat-widget success">
+        <div class="stat-header">
+            <span class="stat-label">Active Suppliers</span>
+            <span class="stat-icon">✅</span>
+        </div>
+        <div class="stat-value text-success">{{ $rows->count() }}</div>
+        <div class="stat-footer">
+            <span class="stat-description">Currently active</span>
+        </div>
+    </div>
+</div>
+
+{{-- ========== DAFTAR SUPPLIER ========== --}}
+<div class="widget-card">
+    <div class="card-header">
+        <h3 class="card-title">Daftar Suppliers</h3>
+        <button type="button" class="btn-primary btn-sm" id="btnTambah"
+                data-bs-toggle="modal" data-bs-target="#modalSupplier">
+            <span>+</span> Tambah Supplier
+        </button>
+    </div>
+
+    {{-- Tabs --}}
+    <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--gray-200); background: var(--gray-50);">
+        <div style="display: flex; gap: 0.5rem; border-bottom: 2px solid var(--gray-200);">
+            <a href="{{ route('supplier.index') }}" class="tab-button {{ !request('tipe') ? 'active' : '' }}" style="text-decoration: none;">
+                <span>📋</span>
+                <span>Semua Supplier</span>
+            </a>
+            <a href="{{ route('supplier.index', ['tipe' => 'lokal']) }}" class="tab-button {{ request('tipe') === 'lokal' ? 'active' : '' }}" style="text-decoration: none;">
+                <span>🏠</span>
+                <span>Supplier Lokal</span>
+            </a>
+            <a href="{{ route('supplier.index', ['tipe' => 'impor']) }}" class="tab-button {{ request('tipe') === 'impor' ? 'active' : '' }}" style="text-decoration: none;">
+                <span>🌏</span>
+                <span>Supplier Import</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body no-padding">
         @if($rows->isEmpty())
             <div class="empty-state">
-                <i class="bi bi-building"></i>
+                <div class="icon">🏭</div>
                 <h6>Belum ada data supplier</h6>
-                <p class="text-muted mb-2">Tambahkan supplier pertama Anda.</p>
-                <button type="button" class="btn btn-primary btn-sm"
+                <p class="text-muted" style="margin-bottom: 0.5rem;">Tambahkan supplier pertama Anda.</p>
+                <button type="button" class="btn-primary btn-sm"
                         data-bs-toggle="modal" data-bs-target="#modalSupplier">
-                    <i class="bi bi-plus-lg"></i> Tambah Supplier
+                    <span>+</span> Tambah Supplier
                 </button>
             </div>
         @else
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0 datatable">
-                    <thead>
+            <table class="filament-table datatable">
+                <thead>
+                    <tr>
+                        <th style="min-width:200px">Supplier</th>
+                        <th>Tipe</th>
+                        <th>Negara</th>
+                        <th>Telepon</th>
+                        <th>Email</th>
+                        <th class="text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($rows as $row)
                         <tr>
-                            <th class="text-start" style="min-width:200px">Supplier</th>
-                            <th class="text-center" style="width:90px">Tipe</th>
-                            <th class="text-start">Negara</th>
-                            <th class="text-start">Telepon</th>
-                            <th class="text-start">Email</th>
-                            <th class="text-center" style="width:100px">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($rows as $row)
-                            <tr>
-                                <td>
-                                    <div class="fw-semibold">{{ $row->nama }}</div>
-                                    <small class="text-muted">{{ $row->kode }}</small>
-                                </td>
-                                <td class="text-center">
-                                    @if($row->tipe === 'lokal')
-                                        <span class="badge badge-tipe badge-lokal">Lokal</span>
-                                    @else
-                                        <span class="badge badge-tipe badge-impor">Impor</span>
-                                    @endif
-                                </td>
-                                <td>{{ $row->negara_asal ?: '—' }}</td>
-                                <td>{{ $row->telepon ?: '—' }}</td>
-                                <td>{{ $row->email ?: '—' }}</td>
-                                <td class="text-center">
-                                    <div class="d-flex justify-content-center gap-1">
-                                        <button type="button"
-                                                class="btn btn-icon btn-outline-warning btn-sm btn-edit"
-                                                title="Edit"
-                                                data-id="{{ $row->id }}"
-                                                data-nama="{{ $row->nama }}"
-                                                data-tipe="{{ $row->tipe }}"
-                                                data-negara_asal="{{ $row->negara_asal }}"
-                                                data-telepon="{{ $row->telepon }}"
-                                                data-email="{{ $row->email }}"
-                                                data-npwp="{{ $row->npwp }}"
-                                                data-alamat="{{ $row->alamat }}">
-                                            <i class="bi bi-pencil"></i>
+                            <td>
+                                <strong>{{ $row->nama }}</strong>
+                                <br><small style="color: var(--gray-500);">{{ $row->kode }}</small>
+                            </td>
+                            <td>
+                                @if($row->tipe === 'lokal')
+                                    <span class="badge gray">🏠 Lokal</span>
+                                @else
+                                    <span class="badge info">🌏 Impor</span>
+                                @endif
+                            </td>
+                            <td>{{ $row->negara_asal ?: '—' }}</td>
+                            <td>{{ $row->telepon ?: '—' }}</td>
+                            <td>{{ $row->email ?: '—' }}</td>
+                            <td class="text-right">
+                                <div class="table-actions" style="justify-content: flex-end;">
+                                    <button type="button"
+                                            class="action-btn edit btn-edit"
+                                            title="Edit"
+                                            data-id="{{ $row->id }}"
+                                            data-nama="{{ $row->nama }}"
+                                            data-tipe="{{ $row->tipe }}"
+                                            data-negara_asal="{{ $row->negara_asal }}"
+                                            data-telepon="{{ $row->telepon }}"
+                                            data-email="{{ $row->email }}"
+                                            data-npwp="{{ $row->npwp }}"
+                                            data-alamat="{{ $row->alamat }}">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <form method="post" action="{{ route('supplier.destroy', $row) }}">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="action-btn delete btn-delete" title="Hapus">
+                                            <i class="bi bi-trash3"></i>
                                         </button>
-                                        <form method="post" action="{{ route('supplier.destroy', $row) }}">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="btn btn-icon btn-outline-danger btn-sm btn-delete" title="Hapus">
-                                                <i class="bi bi-trash3"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         @endif
     </div>
 </div>
@@ -230,12 +274,6 @@ $(function () {
         bsModal.show();
     });
 
-    @if(session('success'))
-        Swal.fire({ toast:true, position:'top-end', icon:'success', title:'{{ session("success") }}', showConfirmButton:false, timer:3000, timerProgressBar:true });
-    @endif
-    @if(session('error'))
-        Swal.fire({ toast:true, position:'top-end', icon:'error', title:'{{ session("error") }}', showConfirmButton:false, timer:4000, timerProgressBar:true });
-    @endif
     @if($errors->any()) bsModal.show(); @endif
     @if($editData)
         setEditMode({

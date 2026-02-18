@@ -4,79 +4,112 @@
 @section('page_title', 'Invoice')
 @section('use_toast', true)
 
+@section('breadcrumb')
+<a href="{{ route('dashboard') }}" class="breadcrumb-item">Dashboard</a>
+<span class="breadcrumb-separator">/</span>
+<span class="breadcrumb-item">Penjualan</span>
+<span class="breadcrumb-separator">/</span>
+<span class="breadcrumb-item">Invoice</span>
+@endsection
+
 @section('content')
 
-{{-- ========== DAFTAR INVOICE ========== --}}
-<div class="card shadow-sm">
-    <div class="card-header">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <span class="fw-semibold d-flex align-items-center gap-2">
-                <i class="bi bi-receipt text-primary"></i> Daftar Invoice
-                <span class="badge bg-secondary rounded-pill">{{ $rows->count() }}</span>
-            </span>
-            @if($eligibleSuratJalan->isNotEmpty())
-                <button type="button" class="btn btn-primary btn-sm" id="btnTambah"
-                        data-bs-toggle="modal" data-bs-target="#modalInvoice">
-                    <i class="bi bi-plus-lg"></i> Generate Invoice
-                </button>
-            @else
-                <span class="text-muted small"><i class="bi bi-info-circle"></i> Tidak ada surat jalan yang siap di-invoice</span>
-            @endif
+@php
+    $totalInvoice = $rows->count();
+    $totalAmount = $rows->sum('total');
+@endphp
+
+{{-- Stats --}}
+<div class="stats-grid-2" style="margin-bottom: 1.5rem;">
+    <div class="stat-widget">
+        <div class="stat-header">
+            <span class="stat-label">Total Invoice</span>
+            <span class="stat-icon"><i class="bi bi-receipt"></i></span>
+        </div>
+        <div class="stat-value">{{ $totalInvoice }}</div>
+        <div class="stat-footer">
+            <span class="stat-description">Invoice dibuat</span>
         </div>
     </div>
-    <div class="card-body p-0">
+    <div class="stat-widget success">
+        <div class="stat-header">
+            <span class="stat-label">Total Amount</span>
+            <span class="stat-icon"><i class="bi bi-cash-stack"></i></span>
+        </div>
+        <div class="stat-value" style="font-size:1.25rem;">@rupiah($totalAmount)</div>
+        <div class="stat-footer">
+            <span class="stat-description">Total nilai invoice</span>
+        </div>
+    </div>
+</div>
+
+{{-- Table Card --}}
+<div class="widget-card">
+    <div class="card-header">
+        <h3 class="card-title">Daftar Invoice</h3>
+        @if($eligibleSuratJalan->isNotEmpty())
+            <button type="button" class="btn-primary" id="btnTambah"
+                    data-bs-toggle="modal" data-bs-target="#modalInvoice">
+                <i class="bi bi-plus-lg"></i> Generate Invoice
+            </button>
+        @else
+            <span style="color:var(--gray-500); font-size:0.85rem;"><i class="bi bi-info-circle"></i> Tidak ada surat jalan yang siap di-invoice</span>
+        @endif
+    </div>
+
+    <div class="card-body no-padding">
         @if($rows->isEmpty())
             <div class="empty-state">
-                <i class="bi bi-receipt"></i>
+                <i class="bi bi-receipt" style="font-size:3rem;"></i>
                 <h6>Belum ada invoice</h6>
-                <p class="text-muted mb-2">Invoice dibuat dari surat jalan yang sudah berstatus Completed.</p>
+                <p class="text-muted" style="margin-bottom:0.5rem;">Invoice dibuat dari surat jalan yang sudah berstatus Completed.</p>
                 @if($eligibleSuratJalan->isNotEmpty())
-                    <button type="button" class="btn btn-primary btn-sm"
+                    <button type="button" class="btn-primary"
                             data-bs-toggle="modal" data-bs-target="#modalInvoice">
                         <i class="bi bi-plus-lg"></i> Generate Invoice
                     </button>
                 @endif
             </div>
         @else
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0 datatable">
-                    <thead>
+            <table class="filament-table">
+                <thead>
+                    <tr>
+                        <th>No Invoice</th>
+                        <th>Tanggal</th>
+                        <th>No SJ</th>
+                        <th>Customer</th>
+                        <th>Total</th>
+                        <th>Sisa</th>
+                        <th class="text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($rows as $row)
                         <tr>
-                            <th class="text-start" style="min-width:140px">No Invoice</th>
-                            <th class="text-center" style="width:120px">Tanggal</th>
-                            <th class="text-start" style="min-width:120px">No SJ</th>
-                            <th class="text-start" style="min-width:150px">Customer</th>
-                            <th class="text-end" style="min-width:130px">Total</th>
-                            <th class="text-end" style="min-width:130px">Sisa</th>
-                            <th class="text-center" style="width:80px">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($rows as $row)
-                            <tr>
-                                <td><span class="fw-semibold">{{ $row->nomor }}</span></td>
-                                <td class="text-center">{{ \Carbon\Carbon::parse($row->tanggal)->format('d M Y') }}</td>
-                                <td><small class="text-muted">{{ $row->suratJalan->nomor }}</small></td>
-                                <td>{{ $row->customer->nama }}</td>
-                                <td class="text-end font-monospace">@rupiah($row->total)</td>
-                                <td class="text-end font-monospace">
-                                    @if($row->sisa <= 0)
-                                        <span class="text-success fw-medium">Lunas</span>
-                                    @else
-                                        <span class="text-danger">@rupiah($row->sisa)</span>
-                                    @endif
-                                </td>
-                                <td class="text-center">
-                                    <a class="btn btn-icon btn-outline-dark btn-sm" target="_blank"
-                                       href="{{ route('invoice.print', $row) }}" title="Cetak">
+                            <td><strong>{{ $row->nomor }}</strong></td>
+                            <td>{{ \Carbon\Carbon::parse($row->tanggal)->format('d M Y') }}</td>
+                            <td><span style="font-size:0.85rem; color:var(--gray-500);">{{ $row->suratJalan->nomor }}</span></td>
+                            <td>{{ $row->customer->nama }}</td>
+                            <td style="font-family:monospace;">@rupiah($row->total)</td>
+                            <td>
+                                @if($row->sisa <= 0)
+                                    <span class="badge success">Lunas</span>
+                                @else
+                                    <span class="badge danger" style="font-family:monospace;">@rupiah($row->sisa)</span>
+                                @endif
+                            </td>
+                            <td class="text-right">
+                                <div class="table-actions" style="justify-content:flex-end;">
+                                    <a class="action-btn view" target="_blank"
+                                       href="{{ route('invoice.print', $row) }}" title="Cetak" style="text-decoration:none;">
                                         <i class="bi bi-printer"></i>
                                     </a>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         @endif
     </div>
 </div>
@@ -176,12 +209,6 @@
 @push('scripts')
 <script>
 $(function () {
-    @if(session('success'))
-        Swal.fire({ toast:true, position:'top-end', icon:'success', title:'{{ session("success") }}', showConfirmButton:false, timer:3000, timerProgressBar:true });
-    @endif
-    @if(session('error'))
-        Swal.fire({ toast:true, position:'top-end', icon:'error', title:'{{ session("error") }}', showConfirmButton:false, timer:4000, timerProgressBar:true });
-    @endif
 });
 </script>
 @endpush

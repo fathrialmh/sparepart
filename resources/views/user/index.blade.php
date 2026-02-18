@@ -4,91 +4,122 @@
 @section('page_title', 'User Management')
 @section('use_toast', true)
 
+@section('breadcrumb')
+<a href="{{ route('dashboard') }}" class="breadcrumb-item">Dashboard</a>
+<span class="breadcrumb-separator">/</span>
+<span class="breadcrumb-item">Master Data</span>
+<span class="breadcrumb-separator">/</span>
+<span class="breadcrumb-item">Users</span>
+@endsection
+
 @section('content')
 
-{{-- ========== DAFTAR USER ========== --}}
-<div class="card shadow-sm">
-    <div class="card-header">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <span class="fw-semibold d-flex align-items-center gap-2">
-                <i class="bi bi-shield-lock text-primary"></i> Daftar User
-                <span class="badge bg-secondary rounded-pill">{{ $rows->count() }}</span>
-            </span>
-            <button type="button" class="btn btn-primary btn-sm" id="btnTambah"
-                    data-bs-toggle="modal" data-bs-target="#modalUser">
-                <i class="bi bi-plus-lg"></i> Tambah User
-            </button>
+@php
+    $totalUsers = $rows->count();
+    $adminUsers = $rows->where('role', 'admin')->count();
+@endphp
+
+{{-- Stats --}}
+<div class="stats-grid-2" style="margin-bottom: 1.5rem;">
+    <div class="stat-widget">
+        <div class="stat-header">
+            <span class="stat-label">Total Users</span>
+            <span class="stat-icon"><i class="bi bi-people"></i></span>
+        </div>
+        <div class="stat-value">{{ $totalUsers }}</div>
+        <div class="stat-footer">
+            <span class="stat-description">Registered users</span>
         </div>
     </div>
-    <div class="card-body p-0">
+    <div class="stat-widget danger">
+        <div class="stat-header">
+            <span class="stat-label">Admin Users</span>
+            <span class="stat-icon"><i class="bi bi-shield-lock"></i></span>
+        </div>
+        <div class="stat-value">{{ $adminUsers }}</div>
+        <div class="stat-footer">
+            <span class="stat-description">Administrator</span>
+        </div>
+    </div>
+</div>
+
+{{-- Table Card --}}
+<div class="widget-card">
+    <div class="card-header">
+        <h3 class="card-title">Daftar Users</h3>
+        <button type="button" class="btn-primary" id="btnTambah"
+                data-bs-toggle="modal" data-bs-target="#modalUser">
+            <i class="bi bi-plus-lg"></i> Tambah User
+        </button>
+    </div>
+
+    <div class="card-body no-padding">
         @if($rows->isEmpty())
             <div class="empty-state">
-                <i class="bi bi-shield-lock"></i>
+                <i class="bi bi-shield-lock" style="font-size:3rem;"></i>
                 <h6>Belum ada data user</h6>
-                <p class="text-muted mb-2">Tambahkan user pertama Anda.</p>
-                <button type="button" class="btn btn-primary btn-sm"
+                <p class="text-muted" style="margin-bottom:0.5rem;">Tambahkan user pertama Anda.</p>
+                <button type="button" class="btn-primary"
                         data-bs-toggle="modal" data-bs-target="#modalUser">
                     <i class="bi bi-plus-lg"></i> Tambah User
                 </button>
             </div>
         @else
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0 datatable">
-                    <thead>
+            <table class="filament-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Nama Lengkap</th>
+                        <th>Role</th>
+                        <th>Dibuat</th>
+                        <th class="text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($rows as $row)
                         <tr>
-                            <th class="text-start" style="min-width:160px">User</th>
-                            <th class="text-start" style="min-width:140px">Nama Lengkap</th>
-                            <th class="text-center" style="width:100px">Role</th>
-                            <th class="text-start" style="min-width:150px">Dibuat</th>
-                            <th class="text-center" style="width:100px">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($rows as $row)
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="avatar-circle {{ $row->role === 'admin' ? 'avatar-admin' : 'avatar-user' }}">
-                                            {{ strtoupper(substr($row->nama, 0, 1)) }}
-                                        </div>
-                                        <span class="fw-medium">{{ $row->username }}</span>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:0.75rem;">
+                                    <div style="width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg, rgb(249 115 22) 0%, rgb(234 88 12) 100%); color:white; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:0.75rem;">
+                                        {{ strtoupper(substr($row->nama, 0, 1)) }}
                                     </div>
-                                </td>
-                                <td>{{ $row->nama }}</td>
-                                <td class="text-center">
-                                    @if($row->role === 'admin')
-                                        <span class="badge bg-danger bg-opacity-10 text-danger">Admin</span>
-                                    @else
-                                        <span class="badge bg-info bg-opacity-10 text-info">User</span>
+                                    <strong>{{ $row->username }}</strong>
+                                </div>
+                            </td>
+                            <td>{{ $row->nama }}</td>
+                            <td>
+                                @if($row->role === 'admin')
+                                    <span class="badge danger">Admin</span>
+                                @else
+                                    <span class="badge info">User</span>
+                                @endif
+                            </td>
+                            <td><span style="font-size:0.85rem; color:var(--gray-500);">{{ $row->created_at->format('d M Y, H:i') }}</span></td>
+                            <td class="text-right">
+                                <div class="table-actions" style="justify-content:flex-end;">
+                                    <button type="button"
+                                            class="action-btn edit btn-edit"
+                                            title="Edit"
+                                            data-id="{{ $row->id }}"
+                                            data-username="{{ $row->username }}"
+                                            data-nama="{{ $row->nama }}"
+                                            data-role="{{ $row->role }}">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    @if(auth()->id() !== $row->id)
+                                        <form method="post" action="{{ route('user.destroy', $row) }}" style="display:inline;">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="action-btn delete btn-delete" title="Hapus">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </form>
                                     @endif
-                                </td>
-                                <td><small class="text-muted">{{ $row->created_at->format('d M Y, H:i') }}</small></td>
-                                <td class="text-center">
-                                    <div class="d-flex justify-content-center gap-1">
-                                        <button type="button"
-                                                class="btn btn-icon btn-outline-warning btn-sm btn-edit"
-                                                title="Edit"
-                                                data-id="{{ $row->id }}"
-                                                data-username="{{ $row->username }}"
-                                                data-nama="{{ $row->nama }}"
-                                                data-role="{{ $row->role }}">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        @if(auth()->id() !== $row->id)
-                                            <form method="post" action="{{ route('user.destroy', $row) }}">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-icon btn-outline-danger btn-sm btn-delete" title="Hapus">
-                                                    <i class="bi bi-trash3"></i>
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         @endif
     </div>
 </div>
@@ -207,12 +238,6 @@ $(function () {
         bsModal.show();
     });
 
-    @if(session('success'))
-        Swal.fire({ toast:true, position:'top-end', icon:'success', title:'{{ session("success") }}', showConfirmButton:false, timer:3000, timerProgressBar:true });
-    @endif
-    @if(session('error'))
-        Swal.fire({ toast:true, position:'top-end', icon:'error', title:'{{ session("error") }}', showConfirmButton:false, timer:4000, timerProgressBar:true });
-    @endif
     @if($errors->any()) bsModal.show(); @endif
     @if($editData)
         setEditMode({
