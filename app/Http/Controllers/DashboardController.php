@@ -20,6 +20,27 @@ class DashboardController extends Controller
         $totalCustomer = Customer::count();
         $totalSupplier = Supplier::count();
         $totalInvoice = Invoice::count();
+        $totalRevenue = (float) Invoice::sum('total');
+        $totalOrders = SuratJalan::count();
+        $activeCustomers = Invoice::whereNotNull('customer_id')->distinct('customer_id')->count('customer_id');
+        $pendingInvoices = Invoice::query()
+            ->where(function ($query) {
+                $query->whereIn('payment_status', ['unpaid', 'partial'])
+                    ->orWhereNull('payment_status');
+            })
+            ->count();
+
+        $totalPiutang = (float) Invoice::query()
+            ->selectRaw('SUM(GREATEST(total - COALESCE(payment_amount, 0), 0)) as total_piutang')
+            ->value('total_piutang');
+
+        $overduePiutang = (float) Invoice::query()
+            ->whereDate('due_date', '<', now()->toDateString())
+            ->whereRaw('(total - COALESCE(payment_amount, 0)) > 0')
+            ->selectRaw('SUM(GREATEST(total - COALESCE(payment_amount, 0), 0)) as overdue_piutang')
+            ->value('overdue_piutang');
+
+        $totalPaymentReceived = (float) Invoice::sum('payment_amount');
 
         $months = collect(range(5, 0))
             ->map(fn ($i) => now()->subMonths($i)->format('Y-m'))
@@ -61,6 +82,14 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        $topCustomers = Invoice::query()
+            ->join('customers as c', 'c.id', '=', 'invoices.customer_id')
+            ->selectRaw('c.nama, SUM(invoices.total) as total_revenue, COUNT(invoices.id) as total_orders')
+            ->groupBy('invoices.customer_id', 'c.nama')
+            ->orderByDesc('total_revenue')
+            ->limit(5)
+            ->get();
+
         $stokRendahList = Barang::select('kode', 'nama', 'stok', 'satuan')
             ->where('stok', '<=', 10)
             ->orderBy('stok')
@@ -81,6 +110,13 @@ class DashboardController extends Controller
             'totalCustomer',
             'totalSupplier',
             'totalInvoice',
+            'totalRevenue',
+            'totalOrders',
+            'activeCustomers',
+            'pendingInvoices',
+            'totalPiutang',
+            'overduePiutang',
+            'totalPaymentReceived',
             'monthLabels',
             'sjData',
             'bmData',
@@ -88,6 +124,7 @@ class DashboardController extends Controller
             'statusLabels',
             'statusData',
             'topBarang',
+            'topCustomers',
             'stokRendahList',
             'latestTransactions',
         ));

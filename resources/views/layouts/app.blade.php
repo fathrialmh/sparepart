@@ -26,8 +26,8 @@
             transition: all 0.2s;
             margin-bottom: -2px;
         }
-        .tab-button:hover { color: rgb(249 115 22); background: var(--gray-100); }
-        .tab-button.active { color: rgb(249 115 22); border-bottom-color: rgb(249 115 22); background: white; }
+        .tab-button:hover { color: var(--filament-primary); background: var(--gray-100); }
+        .tab-button.active { color: var(--filament-primary); border-bottom-color: var(--filament-primary); background: white; }
 
         .type-selection-card {
             padding: 2rem 1.5rem;
@@ -42,8 +42,8 @@
             align-items: center;
         }
         .type-selection-card:hover {
-            border-color: rgb(249 115 22);
-            background: rgb(255 247 237);
+            border-color: var(--filament-primary);
+            background: rgb(238 238 255);
             transform: translateY(-2px);
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
@@ -123,7 +123,7 @@
         <aside class="filament-sidebar">
             <div class="sidebar-header">
                 <div class="logo">
-                    <span class="logo-icon">📦</span>
+                    <span class="logo-icon"><i class="bi bi-box-seam-fill"></i></span>
                     <span class="logo-text">Adam Jaya</span>
                 </div>
             </div>
@@ -131,82 +131,82 @@
                 @if(auth()->user()->role === 'admin')
                 <div class="nav-group">
                     <a href="{{ route('dashboard') }}" class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                        <span class="nav-icon">📊</span>
+                        <span class="nav-icon"><i class="bi bi-bar-chart-line-fill"></i></span>
                         <span class="nav-label">Dashboard</span>
                     </a>
                 </div>
                 <div class="nav-group">
-                    <div class="nav-group-label">💼 Penjualan</div>
+                    <div class="nav-group-label"><i class="bi bi-briefcase-fill nav-group-label-icon"></i><span>Penjualan</span></div>
                     <a href="{{ route('customer.index') }}" class="nav-item {{ request()->routeIs('customer.*') ? 'active' : '' }}">
-                        <span class="nav-icon">👥</span>
+                        <span class="nav-icon"><i class="bi bi-people-fill"></i></span>
                         <span class="nav-label">Customers</span>
                     </a>
                     <a href="{{ route('price-quotation.index') }}" class="nav-item {{ request()->routeIs('price-quotation.*') ? 'active' : '' }}">
-                        <span class="nav-icon">📋</span>
+                        <span class="nav-icon"><i class="bi bi-file-earmark-text"></i></span>
                         <span class="nav-label">Surat Penawaran</span>
                     </a>
                     <a href="{{ route('surat-jalan.index') }}" class="nav-item {{ request()->routeIs('surat-jalan.*') ? 'active' : '' }}">
-                        <span class="nav-icon">🚚</span>
+                        <span class="nav-icon"><i class="bi bi-truck"></i></span>
                         <span class="nav-label">Surat Jalan</span>
                     </a>
                     <a href="{{ route('invoice.index') }}" class="nav-item {{ request()->routeIs('invoice.*') ? 'active' : '' }}">
-                        <span class="nav-icon">💰</span>
+                        <span class="nav-icon"><i class="bi bi-cash-stack"></i></span>
                         <span class="nav-label">Invoice</span>
                     </a>
                     <a href="{{ route('nota-menyusul.index') }}" class="nav-item {{ request()->routeIs('nota-menyusul.*') ? 'active' : '' }}">
-                        <span class="nav-icon">📝</span>
+                        <span class="nav-icon"><i class="bi bi-journal-text"></i></span>
                         <span class="nav-label">Nota Menyusul</span>
                     </a>
                     <a href="{{ route('keterangan-lain.index') }}" class="nav-item {{ request()->routeIs('keterangan-lain.*') ? 'active' : '' }}">
-                        <span class="nav-icon">📄</span>
+                        <span class="nav-icon"><i class="bi bi-file-earmark-richtext"></i></span>
                         <span class="nav-label">Keterangan Lain</span>
                     </a>
                 </div>
                 <div class="nav-group">
-                    <div class="nav-group-label">🛒 Pembelian</div>
+                    <div class="nav-group-label"><i class="bi bi-bag-fill nav-group-label-icon"></i><span>Pembelian</span></div>
                     <a href="{{ route('barang.index') }}" class="nav-item {{ request()->routeIs('barang.*') ? 'active' : '' }}">
-                        <span class="nav-icon">📦</span>
+                        <span class="nav-icon"><i class="bi bi-box-seam"></i></span>
                         <span class="nav-label">Master Barang/Stock</span>
                     </a>
                     <a href="{{ route('supplier.index') }}" class="nav-item {{ request()->routeIs('supplier.*') ? 'active' : '' }}">
-                        <span class="nav-icon">🏭</span>
+                        <span class="nav-icon"><i class="bi bi-buildings"></i></span>
                         <span class="nav-label">Suppliers</span>
                     </a>
                     <a href="{{ route('purchase-order.index') }}" class="nav-item {{ request()->routeIs('purchase-order.*') ? 'active' : '' }}">
-                        <span class="nav-icon">🛍️</span>
+                        <span class="nav-icon"><i class="bi bi-bag-check"></i></span>
                         <span class="nav-label">Pembelian Barang (PO)</span>
                     </a>
                 </div>
                 <div class="nav-group">
-                    <div class="nav-group-label">📈 Laporan</div>
+                    <div class="nav-group-label"><i class="bi bi-graph-up-arrow nav-group-label-icon"></i><span>Laporan</span></div>
                     <a href="{{ route('reports.sales') }}" class="nav-item {{ request()->routeIs('reports.sales') ? 'active' : '' }}">
-                        <span class="nav-icon">📊</span>
+                        <span class="nav-icon"><i class="bi bi-clipboard-data"></i></span>
                         <span class="nav-label">Laporan Penjualan</span>
                     </a>
                     <a href="{{ route('reports.purchase') }}" class="nav-item {{ request()->routeIs('reports.purchase') ? 'active' : '' }}">
-                        <span class="nav-icon">📊</span>
+                        <span class="nav-icon"><i class="bi bi-bar-chart-steps"></i></span>
                         <span class="nav-label">Laporan Pembelian</span>
                     </a>
                     <a href="{{ route('reports.inventory') }}" class="nav-item {{ request()->routeIs('reports.inventory') ? 'active' : '' }}">
-                        <span class="nav-icon">📦</span>
+                        <span class="nav-icon"><i class="bi bi-boxes"></i></span>
                         <span class="nav-label">Laporan Inventory</span>
                     </a>
                 </div>
                 <div class="nav-group">
-                    <div class="nav-group-label">⚙️ Master Data</div>
+                    <div class="nav-group-label"><i class="bi bi-sliders nav-group-label-icon"></i><span>Master Data</span></div>
                     <a href="{{ route('user.index') }}" class="nav-item {{ request()->routeIs('user.*') ? 'active' : '' }}">
-                        <span class="nav-icon">👤</span>
+                        <span class="nav-icon"><i class="bi bi-person"></i></span>
                         <span class="nav-label">Users</span>
                     </a>
                     <a href="{{ route('role.index') }}" class="nav-item {{ request()->routeIs('role.*') ? 'active' : '' }}">
-                        <span class="nav-icon">🔐</span>
+                        <span class="nav-icon"><i class="bi bi-shield-lock"></i></span>
                         <span class="nav-label">Roles & Permissions</span>
                     </a>
                 </div>
                 @else
                 <div class="nav-group">
                     <a href="{{ route('surat-jalan.index') }}" class="nav-item {{ request()->routeIs('surat-jalan.*') ? 'active' : '' }}">
-                        <span class="nav-icon">🚚</span>
+                        <span class="nav-icon"><i class="bi bi-truck"></i></span>
                         <span class="nav-label">Surat Jalan</span>
                     </a>
                 </div>
